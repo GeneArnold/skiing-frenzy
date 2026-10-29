@@ -13,6 +13,7 @@ export const SPRITES = [
   "tree", "rock", "snowman", "reindeer", "ice", "cocoa", "gift",
   "kid-1", "kid-2", "kid-3", "kid-4", "kid-5", "kid-6", "kid-7",
   "house-red", "house-blue", "house-green", "house-brown",
+  "birch", "fence", "lantern", "icespire", "candycane", "xmastree",
 ];
 
 export class BootScene extends Phaser.Scene {

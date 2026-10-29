@@ -3,7 +3,7 @@
 // Tap or swipe to ski (it starts by itself after a few seconds).
 import * as audio from "../audio.js";
 import { listenForGestures } from "../gestures.js";
-import { runRules } from "../rules.js";
+import { areaOf, runRules } from "../rules.js";
 import { H, W, backdrop, setupCamera, text, woodSign } from "../ui.js";
 
 export class DayScene extends Phaser.Scene {
@@ -16,8 +16,13 @@ export class DayScene extends Phaser.Scene {
     setupCamera(this);
     this.run = run;
     const r = runRules(run.run);
+    const area = areaOf(run.run);
     backdrop(this);
+    this.add.rectangle(0, 0, W, H, area.light).setOrigin(0).setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.add.rectangle(0, 0, W, H, 0x000000, 0.3).setOrigin(0);
+    // which part of the mountain; the first run in a new part says so
+    const fresh = run.run > 0 && run.run % 3 === 0;
+    text(this, W / 2, fresh ? 62 : 82, (fresh ? "NOW ENTERING\n" : "") + area.name, fresh ? 34 : 30, { color: area.colour, strokeThickness: 7 });
 
     woodSign(this, W / 2, 260, 460, 230);
     text(this, W / 2, 196, r.name, 60, { color: "#ffffff", strokeThickness: 10 });

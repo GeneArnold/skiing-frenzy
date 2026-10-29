@@ -8,10 +8,10 @@ import * as sayings from "../sayings.js";
 import * as store from "../storage.js";
 import { BOYS, CREEK_H, LEFT, RIGHT, makeKid, makeRow } from "../course.js";
 import {
-  BIG_HOLD, BIG_S, HOP_S, KID_CALL, KID_THANKS, KINDS, LIVES, MAX_LIVES, METRE, NUDGE, POINTS, REACH, SAFE_S, SANTA_GIFT, SLIDE_S, STEER, runRules,
+  BIG_HOLD, BIG_S, HOP_S, KID_CALL, KID_THANKS, KINDS, LIVES, MAX_LIVES, METRE, NUDGE, POINTS, REACH, SAFE_S, SANTA_GIFT, SLIDE_S, STEER, areaOf, runRules,
 } from "../rules.js";
 import { sized } from "../textures.js";
-import { H, W, fingerAt, floatText, inside, setupCamera, speech, text } from "../ui.js";
+import { H, W, fingerAt, floatText, inside, setupCamera, snowfall, speech, text } from "../ui.js";
 
 const SANTA_Y = 290;        // where Santa's skis touch the snow, on screen
 const FIELD_H = 800;        // the slope shows above the buttons
@@ -26,6 +26,27 @@ const PADS = {
 };
 const TAP_MS = 180;         // a JUMP press shorter than this is a hop
 const GAGS = { tree: "BONK!", rock: "OOF!", snowman: "SPLAT!", reindeer: "OH DEER!", creek: "SPLASH!" };
+
+// The light (dusk, night) is laid over the slope at this depth: above everything on the snow and
+// Santa, under the speech bubbles, the score and the buttons.
+const LIGHT_D = 4400;
+// Falling snow for each kind of weather (see snowfall() in ui.js).
+const WEATHER = {
+  snow: { count: 45 },
+  wind: { count: 60, wind: 140, fall: 1.3 },
+  blizzard: { count: 220, wind: 280, fall: 2 },
+};
+// The village cottages at the bottom of each run: x, y (where it stands), colour. Back row first.
+const HOUSES = [[380, 110, "red"], [90, 120, "blue"], [235, 160, "brown"], [475, 190, "green"], [150, 260, "red"], [340, 280, "blue"]];
+// How tall each edge picture is shown (the pine tree is sized like the ones on the slope).
+const EDGE_H = { birch: 150, fence: 55, lantern: 115, icespire: 130, candycane: 105, xmastree: 135 };
+
+function pickEdge(weights) {
+  const total = Object.values(weights).reduce((a, b) => a + b, 0);
+  let roll = Math.random() * total;
+  for (const [k, w] of Object.entries(weights)) if ((roll -= w) < 0) return k;
+  return "tree";
+}
 
 export class PlayScene extends Phaser.Scene {
   constructor() {
@@ -66,8 +87,16 @@ export class PlayScene extends Phaser.Scene {
     this.villageAt = this.rules.length;
     this.hintedKid = this.run.run > 0;
 
-    this.add.rectangle(0, 0, W, FIELD_H, 0xf4f8ff).setOrigin(0).setDepth(-10);
-    this.snow = this.add.tileSprite(0, 0, W, FIELD_H, "snow").setOrigin(0).setDepth(-9);
+    // the part of the mountain this run is on: its snow, its light and its weather
+    this.area = areaOf(this.run.run);
+    this.add.rectangle(0, 0, W, FIELD_H, this.area.snow).setOrigin(0).setDepth(-10);
+    this.snow = this.add.tileSprite(0, 0, W, FIELD_H, "snow").setOrigin(0).setDepth(-9).setTint(this.area.snow);
+    if (this.area.light !== 0xffffff) {
+      this.add.rectangle(0, 0, W, FIELD_H, this.area.light).setOrigin(0).setDepth(LIGHT_D).setBlendMode(Phaser.BlendModes.MULTIPLY);
+    }
+    const weather = this.rules.weather ?? this.area.weather;
+    if (WEATHER[weather]) snowfall(this, LIGHT_D + 300, WEATHER[weather]);
+    if (weather === "blizzard") this.add.rectangle(0, 0, W, FIELD_H, 0xffffff, 0.25).setOrigin(0).setDepth(LIGHT_D + 200);
     this.trackG = this.add.graphics().setDepth(-5);
     this.shadow = this.add.ellipse(this.x, SANTA_Y, 56, 18, 0x1b2440, 0.18).setDepth(-4);
     this.santa = sized(this.add.image(this.x, SANTA_Y, "santa").setOrigin(0.5, 0.97), 0.8).setDepth(SANTA_Y);
@@ -396,10 +425,20 @@ export class PlayScene extends Phaser.Scene {
       if (Math.random() < this.rules.kids) this.addThing(makeKid(this.nextRow + gap / 2));
       this.nextRow += gap;
     }
-    // the forest along both edges
+    // the scenery along both edges, which changes with the area
     while (this.nextEdge < ahead) {
       for (const x of [Phaser.Math.Between(-10, 14), Phaser.Math.Between(W - 14, W + 10)]) {
-        this.trees.push(sized(this.add.image(x, 0, "tree").setOrigin(0.5, 0.95), Phaser.Math.FloatBetween(0.8, 1.05)).setData("y", this.nextEdge));
+        const key = pickEdge(this.area.edges);
+        const s = this.add.image(x, 0, key).setOrigin(0.5, 0.95).setData("y", this.nextEdge);
+        if (key === "tree") sized(s, Phaser.Math.FloatBetween(0.8, 1.05));
+        else s.setScale((EDGE_H[key] / s.frame.height) * Phaser.Math.FloatBetween(0.85, 1.05));
+        if (this.area.glow?.includes(key)) {
+          // lanterns and lit-up trees shine through the dusk and the dark
+          s.setData("glow", this.add.image(x, 0, "glow").setBlendMode(Phaser.BlendModes.ADD).setDepth(LIGHT_D + 1)
+            .setScale(key === "lantern" ? 0.8 : 0.9).setAlpha(key === "lantern" ? 0.7 : 0.35));
+          s.setData("glowUp", s.displayHeight * (key === "lantern" ? 0.85 : 0.5));
+        }
+        this.trees.push(s);
       }
       this.nextEdge += Phaser.Math.Between(60, 90);
     }
@@ -411,7 +450,12 @@ export class PlayScene extends Phaser.Scene {
       t.hint?.destroy();
       return false;
     });
-    this.trees = this.trees.filter((s) => (s.getData("y") > gone ? true : (s.destroy(), false)));
+    this.trees = this.trees.filter((s) => {
+      if (s.getData("y") > gone) return true;
+      s.getData("glow")?.destroy();
+      s.destroy();
+      return false;
+    });
   }
 
   addThing(t) {
@@ -475,9 +519,13 @@ export class PlayScene extends Phaser.Scene {
         this.bubble.c.setPosition(x, Math.max(130, who.y - who.displayHeight - 4));
       }
     }
-    for (const s of this.trees) s.setY(s.getData("y") - top).setDepth(s.getData("y") - top);
+    for (const s of this.trees) {
+      s.setY(s.getData("y") - top).setDepth(s.getData("y") - top);
+      s.getData("glow")?.setPosition(s.x, s.y - s.getData("glowUp"));
+    }
     this.snow.tilePositionY = this.dist;
     this.village.y = this.villageAt - top;
+    this.villageGlow.y = this.village.y;
 
     // Santa: leaning into turns, up in the air, crouching while JUMP is held, blinking when safe
     const air = this.airS > 0 ? Math.sin((Math.PI * this.airT) / this.airS) * this.airH : 0;
@@ -526,8 +574,12 @@ export class PlayScene extends Phaser.Scene {
     g.fillStyle(0xd62828).fillRoundedRect(44, -92, W - 88, 44, 8);
     c.add(g);
     // cartoon cottages (img/house-*.png), back row first so the front ones overlap them
-    const houses = [[380, 110, "red"], [90, 120, "blue"], [235, 160, "brown"], [475, 190, "green"], [150, 260, "red"], [340, 280, "blue"]];
-    for (const [x, y, colour] of houses) c.add(this.add.image(x, y, "house-" + colour).setOrigin(0.5, 0.9).setScale(0.55));
+    for (const [x, y, colour] of HOUSES) c.add(this.add.image(x, y, "house-" + colour).setOrigin(0.5, 0.9).setScale(0.55));
+    // after dark the windows glow (these ride along with the village, over the dark)
+    this.villageGlow = this.add.container(0, 0).setDepth(LIGHT_D + 1);
+    if (this.area.glow) {
+      for (const [x, y] of HOUSES) this.villageGlow.add(this.add.image(x, y - 40, "glow").setBlendMode(Phaser.BlendModes.ADD).setScale(1.1).setAlpha(0.6));
+    }
     c.add(text(this, W / 2, -70, "🎄 THE VILLAGE 🎄", 28, { color: "#ffffff", strokeThickness: 5 }));
     return c;
   }

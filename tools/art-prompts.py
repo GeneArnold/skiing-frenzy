@@ -2,6 +2,7 @@
 #   python3 tools/art-prompts.py santa [straight turn jump crash]   Santa's poses, one picture each
 #   python3 tools/art-prompts.py kids         a sheet of kids playing in the snow, waiting for gifts
 #   python3 tools/art-prompts.py things [tree rock ...]   things on the slope, one each
+#   python3 tools/art-prompts.py edges [birch fence ...]   the scenery along the sides, one set per area
 #   python3 tools/art-prompts.py houses [red blue ...]   the village cottages at the bottom of a run
 #   add --n 4 for more tries of each (default 3)
 # Tries land in art/source/gen/; tools/cutout.py turns the picks into img/ sprites.
@@ -43,6 +44,15 @@ THINGS = {
     "cocoa": "a single big red mug of hot cocoa with whipped cream and a candy cane" + ONE,
     "gift": "a single wrapped Christmas present, red paper with a green ribbon and a bow" + ONE,
 }
+# Along the edges of the slope, changing with the area (Gene picked "D", four areas, on 2026-10-29).
+EDGES = {
+    "birch": "a single slim white birch tree with black bark marks, a few golden autumn leaves and snow on its branches" + ONE,
+    "fence": "a short section of rustic wooden ranch fence, three posts and two rails, with snow on top" + ONE,
+    "lantern": "a single old-fashioned black iron lamp post with a glowing warm yellow lantern on top and a red bow, snow on top" + ONE,
+    "icespire": "a single tall jagged spire of pale blue ice crystals with a cap of snow, like a frozen waterfall" + ONE,
+    "candycane": "a single giant red and white striped candy cane stuck upright in the snow, with a green bow" + ONE,
+    "xmastree": "a single snowy green pine tree decorated with colourful Christmas lights and a gold star on top" + ONE,
+}
 
 HOUSE = ("a single cosy cartoon Christmas cottage, front view, chunky wobbly hand-drawn shape, a thick "
          "fluffy blanket of snow on the roof with icicles hanging off the edge, a crooked brick chimney, "
@@ -74,6 +84,10 @@ def main():
         for kind, prompt in THINGS.items():
             if not pick or kind in pick:
                 swarm(kind, prompt, 1024, 1024)
+    elif what == "edges":
+        for kind, prompt in EDGES.items():
+            if not pick or kind in pick:
+                swarm("edge-" + kind, prompt, 1024, 1024)
     elif what == "houses":
         for colour, words in HOUSES.items():
             if not pick or colour in pick:

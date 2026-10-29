@@ -127,15 +127,18 @@ export function backdrop(scene) {
   snowfall(scene);
 }
 
-// Gentle snow drifting down over a screen.
-export function snowfall(scene, depth = 8000) {
-  const flakes = Array.from({ length: 40 }, () =>
+// Gentle snow drifting down over a screen. count: how many flakes; wind: px a second sideways; fall:
+// how fast (1 = gentle). A blizzard is lots of fast flakes in a strong wind.
+export function snowfall(scene, depth = 8000, { count = 40, wind = 0, fall = 1 } = {}) {
+  const flakes = Array.from({ length: count }, () =>
     scene.add.circle(Math.random() * W, Math.random() * H, 1.5 + Math.random() * 2.5, 0xffffff, 0.85).setDepth(depth));
   const drift = (_, ms) => {
     for (const f of flakes) {
-      f.y += (f.radius * 14 * ms) / 1000;
-      f.x += Math.sin((f.y + f.radius * 100) / 60) * 0.4;
+      f.y += (f.radius * 14 * fall * ms) / 1000;
+      f.x += Math.sin((f.y + f.radius * 100) / 60) * 0.4 + (wind * f.radius * ms) / 3000;
       if (f.y > H + 5) f.setPosition(Math.random() * W, -5);
+      if (f.x > W + 5) f.setPosition(-5, Math.random() * H);
+      if (f.x < -5) f.setPosition(W + 5, Math.random() * H);
     }
   };
   scene.events.on("update", drift);

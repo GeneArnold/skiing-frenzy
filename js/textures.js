@@ -153,6 +153,11 @@ export function makeTextures(scene) {
     g.destroy();
   }
 
+  // a soft warm glow, added over the dusk and the dark where there's a light
+  make(scene, "glow", 120, 120, (g, w, h) => {
+    for (let r = 60; r > 0; r -= 4) g.fillStyle(0xffc860, 0.05 + (1 - r / 60) * 0.12).fillCircle(w / 2, h / 2, r);
+  });
+
   make(scene, "gift", 44, 44, (g, w, h) => {
     g.fillStyle(INK).fillRect(4, 12, 36, 30);
     g.fillStyle(RED).fillRect(7, 15, 30, 24);

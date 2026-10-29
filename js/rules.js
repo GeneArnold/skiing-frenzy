@@ -70,9 +70,9 @@ export const RUNS = [
     things: { tree: 6, rock: 3, ice: 2, snowman: 1, creek: 1, reindeer: 5 }, kids: 0.6,
   },
   {
-    name: "RUN 11", place: "Deep Dark Woods", note: "So many trees!",
-    speed: 382, speedUp: 80, length: 13000, gap: [165, 230], busy: 2.3,
-    things: { tree: 11, rock: 3, ice: 2, snowman: 1, creek: 1, reindeer: 2 }, kids: 0.6,
+    name: "RUN 11", place: "Blizzard Pass", note: "Snowing so hard! Steady now",
+    speed: 382, speedUp: 80, length: 13000, gap: [170, 235], busy: 2.2,
+    things: { tree: 7, rock: 3, ice: 2, snowman: 1, creek: 1, reindeer: 2 }, kids: 0.6, weather: "blizzard",
   },
   {
     name: "RUN 12", place: "North Pole Peak", note: "The top of the world!",
@@ -80,6 +80,31 @@ export const RUNS = [
     things: { tree: 7, rock: 4, ice: 3, snowman: 2, creek: 2, reindeer: 3 }, kids: 0.6,
   },
 ];
+
+// Every three runs is a new part of the mountain, with its own light, scenery along the edges and
+// weather (Gene picked this, "D", on 2026-10-29), so going further feels like going somewhere new.
+//   snow: the slope's colour.  light: the whole slope is multiplied by this (white = no change).
+//   edges: { picture: weight } along both sides.  glow: those pictures light up (lanterns at dusk).
+//   weather: clear | snow | wind | blizzard (a run can set its own).
+export const AREAS = [
+  {
+    name: "SUNNY SLOPES", colour: "#ffe066", snow: 0xf4f8ff, light: 0xffffff,
+    edges: { tree: 1 }, weather: "clear",
+  },
+  {
+    name: "SUNSET WOODS", colour: "#ffa94d", snow: 0xfff4ea, light: 0xffdcb8,
+    edges: { birch: 4, tree: 2, fence: 1 }, weather: "snow",
+  },
+  {
+    name: "FROSTY FALLS", colour: "#9fd3ff", snow: 0xeaf2ff, light: 0xc0ceF4,
+    edges: { icespire: 3, tree: 3, lantern: 1 }, glow: ["lantern"], weather: "wind",
+  },
+  {
+    name: "NORTH POLE", colour: "#ff8fa3", snow: 0xe4eaff, light: 0x8e9ee0,
+    edges: { xmastree: 3, candycane: 2, lantern: 1 }, glow: ["lantern", "xmastree"], weather: "snow",
+  },
+];
+export const areaOf = (n) => AREAS[Math.floor(n / 3) % AREAS.length];
 
 // Past the last run it keeps going, a little faster and busier each time.
 export function runRules(n) {
