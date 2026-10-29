@@ -99,12 +99,14 @@ export function speech(scene, left, bottom, words, size = 20, wrap = 260) {
   return [g, label];
 }
 
-// The snowy mountain behind the menu screens (a stand-in until the real art is made), with snow
-// falling.
+// The cartoon mountain behind the menu screens (img/bg-title.jpg; a drawn stand-in if it's missing),
+// with snow falling.
 export function backdrop(scene) {
   if (scene.textures.exists("bg-title")) {
     const img = scene.add.image(W / 2, H / 2, "bg-title");
     img.setScale(Math.max(W / img.width, H / img.height));
+    // a soft dark fade along the bottom, so the small words there (install, version) stand out
+    scene.add.graphics().fillGradientStyle(0x1b2440, 0x1b2440, 0x1b2440, 0x1b2440, 0, 0, 0.7, 0.7).fillRect(0, H - 150, W, 150);
   } else {
     const g = scene.add.graphics();
     g.fillGradientStyle(0x1b3a6b, 0x1b3a6b, 0x8fb8e8, 0x8fb8e8, 1);

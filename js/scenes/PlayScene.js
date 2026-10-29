@@ -64,6 +64,8 @@ export class PlayScene extends Phaser.Scene {
     this.rules = runRules(this.run.run);
     this.phase = "ski";      // ski | crash | made-it | over
     this.leaving = false;    // the scene object is reused, so this must be reset every run
+    this.sinkT = -1;         // seconds since Santa fell in a creek (-1: he didn't)
+    this.ring = null;
     this.dist = 0;           // px of slope skied this run
     this.x = W / 2;
     this.vx = 0;
@@ -293,7 +295,7 @@ export class PlayScene extends Phaser.Scene {
         continue;
       }
       if (t.kind === "creek") {
-        if (!air && dy < 0 && dy > -CREEK_H && dx < t.w / 2) this.crash(t);
+        if (!air && dx < t.w / 2 && Math.abs(dy + CREEK_H / 2) < creekHalf(dx, t.w) - 6) this.crash(t);
         continue;
       }
       const k = KINDS[t.kind];
@@ -356,21 +358,44 @@ export class PlayScene extends Phaser.Scene {
     this.nudge = 0;
     audio.play(t.kind === "creek" ? "splash" : "crash");
     this.time.delayedCall(250, () => this.say(t.kind === "creek" ? "splash" : "crash", this.santa));
-    this.cameras.main.shake(300, 0.012);
+    // a creek is a splash: Santa sinks to his chest (place() does it), and nothing shakes
+    this.sinkT = t.kind === "creek" ? 0 : -1;
+    this.sinkAt = t.y + CREEK_H / 2 + 24; // he glides on into the middle of the water
+    if (t.kind === "creek") this.splash();
+    else this.cameras.main.shake(300, 0.012);
     this.cameras.main.flash(250, 255, 60, 60);
     const gag = text(this, W / 2, 470, GAGS[t.kind] ?? "OUCH!", 72, { color: "#ff6b6b", strokeThickness: 10 }).setDepth(6000);
     this.tweens.add({ targets: gag, scale: 1.25, duration: 160, yoyo: true });
     this.loseLifeShow();
     // the thing Santa hit gets a wobble (a snowman loses his head)
-    if (t.sprite) this.tweens.add({ targets: t.sprite, angle: t.kind === "snowman" ? 80 : 8, duration: 90, yoyo: t.kind !== "snowman", repeat: t.kind === "snowman" ? 0 : 3 });
+    if (t.sprite && t.kind !== "creek") this.tweens.add({ targets: t.sprite, angle: t.kind === "snowman" ? 80 : 8, duration: 90, yoyo: t.kind !== "snowman", repeat: t.kind === "snowman" ? 0 : 3 });
     const over = this.run.lives <= 0;
     this.time.delayedCall(over ? 1600 : 1300, () => {
       gag.destroy();
       if (over) return this.wipeout();
       this.phase = "ski";
+      this.sinkT = -1;
       this.safeT = SAFE_S;
       this.ease = 0.25;
     });
+  }
+
+  // Santa goes in the water: a ring of ripples round him and drops flying up.
+  splash() {
+    this.ring = this.add.container(this.x, SANTA_Y).setDepth(SANTA_Y + 1);
+    const g = this.add.graphics();
+    g.fillStyle(0x1b2440).fillEllipse(0, 0, 96, 30);
+    g.fillStyle(0x5aa9ff).fillEllipse(0, 0, 90, 25);
+    g.lineStyle(3, 0xe6f4ff).strokeEllipse(0, 0, 70, 16);
+    this.ring.add(g);
+    this.tweens.add({ targets: g, scaleX: 1.12, duration: 400, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    for (let i = 0; i < 9; i++) {
+      const drop = this.add.circle(this.x, SANTA_Y - 10, Phaser.Math.Between(4, 8), 0x8cc8ff).setStrokeStyle(2, 0x1b2440).setDepth(4600);
+      this.tweens.add({
+        targets: drop, x: this.x + Phaser.Math.Between(-80, 80), y: SANTA_Y - Phaser.Math.Between(50, 120),
+        duration: 300, ease: "Quad.easeOut", yoyo: true, onComplete: () => drop.destroy(),
+      });
+    }
   }
 
   // Losing a life is big and plain: the hat flies off the HUD and "2 LEFT" shows.
@@ -530,7 +555,9 @@ export class PlayScene extends Phaser.Scene {
     // Santa: leaning into turns, up in the air, crouching while JUMP is held, blinking when safe
     const air = this.airS > 0 ? Math.sin((Math.PI * this.airT) / this.airS) * this.airH : 0;
     let key = "santa";
-    if (this.phase === "crash" || this.phase === "over") key = "santa-crash";
+    const sinking = this.sinkT >= 0 && (this.phase === "crash" || this.phase === "over");
+    if (sinking) key = "santa";
+    else if (this.phase === "crash" || this.phase === "over") key = "santa-crash";
     else if (air > 0) key = "santa-jump";
     else if (this.vx !== 0) key = "santa-turn";
     if (this.santa.texture.key !== key) sized(this.santa.setTexture(key), 0.8);
@@ -540,6 +567,22 @@ export class PlayScene extends Phaser.Scene {
     // a crashed Santa lies on top of whatever he hit
     this.santa.setDepth(key === "santa-crash" ? 4500 : SANTA_Y);
     this.santa.setPosition(this.x, SANTA_Y - air).setAngle(this.slideT > 0 ? Math.sin(this.time.now / 40) * 12 : 0);
+    // sinking in a creek: the bottom of him goes under, bobbing a little
+    if (sinking) {
+      this.sinkT += dt;
+      this.dist += (this.sinkAt - this.dist) * Math.min(1, dt * 8);
+      const under = 0.55 * Math.min(1, this.sinkT / 0.35);
+      const fh = this.santa.frame.height;
+      const h = fh * this.santa.scaleY; // how tall he is on screen
+      this.santa.setCrop(0, 0, this.santa.frame.width, fh * (1 - under));
+      this.santa.y += under * h * 0.8 + Math.sin(this.sinkT * 6) * 3;
+      // the ring of water where he went in, at the bottom of what's left showing
+      this.ring?.setPosition(this.x, this.santa.y - h * 0.97 + h * (1 - under));
+    } else if (this.santa.isCropped) {
+      this.santa.setCrop();
+      this.ring?.destroy();
+      this.ring = null;
+    }
     this.santa.setAlpha(this.safeT > 0 && Math.floor(this.safeT * 8) % 2 === 0 ? 0.35 : 1);
     this.shadow.setPosition(this.x, SANTA_Y - 2).setScale(1 - air / 200);
 
@@ -643,16 +686,41 @@ function kidVoice(kid, what) {
   return `${BOYS.includes(kid.look + 1) ? "boy" : "kid"}-${what}`;
 }
 
-// A frozen-over creek with an open stretch of water: jump it or go round.
+// How far a creek reaches up and down from its middle line, dx across from its middle: the ends are
+// rounded, so it's thinner there. The water drawn and the splash check both use this.
+function creekHalf(dx, w) {
+  const e = Math.max(0, 1 - (dx / (w / 2)) ** 2);
+  return (CREEK_H / 2 - 8) * Math.pow(e, 0.35);
+}
+
+// A stretch of open water across the slope: jump it or go round.
 function drawCreek(g, w) {
   g.clear();
-  g.fillStyle(0xffffff).fillRoundedRect(-w / 2 - 8, -6, w + 16, CREEK_H + 12, 22);
-  g.fillStyle(0x1b2440).fillRoundedRect(-w / 2, 0, w, CREEK_H, 18);
-  g.fillStyle(0x3a86ff).fillRoundedRect(-w / 2 + 4, 4, w - 8, CREEK_H - 8, 16);
-  g.lineStyle(3, 0xbfe0ff, 0.9);
-  for (let i = 0; i < 5; i++) {
-    const y = 20 + i * 26;
-    const x = -w / 2 + 20 + ((i * 47) % (w - 60));
-    g.lineBetween(x, y, x + 34, y);
+  // the edge: wavy along the top and bottom, rounded at the ends
+  const pts = (grow) => {
+    const top = [];
+    const bottom = [];
+    for (let i = 0; i <= 24; i++) {
+      const x = -w / 2 + (w * i) / 24;
+      const half = creekHalf(Math.abs(x), w) + grow;
+      const wave = Math.sin(i * 1.3 + w) * 5 * (half > 20 ? 1 : 0);
+      top.push({ x, y: CREEK_H / 2 - half + wave });
+      bottom.push({ x, y: CREEK_H / 2 + half + wave * 0.7 });
+    }
+    return [...top, ...bottom.reverse()];
+  };
+  g.fillStyle(0xffffff).fillPoints(pts(10), true); // a snowy bank
+  g.fillStyle(0x1b2440).fillPoints(pts(4), true);   // the cartoon outline
+  g.fillStyle(0x2f7de1).fillPoints(pts(0), true);   // deep water
+  g.fillStyle(0x5aa9ff).fillPoints(pts(-14).map((p) => ({ x: p.x, y: p.y - 4 })), true); // lighter in the middle
+  // ripples: little white curves
+  g.lineStyle(3, 0xe6f4ff, 0.9);
+  for (let i = 0; i < Math.round(w / 60); i++) {
+    const x = -w / 2 + 40 + ((i * 71 + w) % Math.max(1, w - 80));
+    const y = CREEK_H / 2 - 22 + ((i * 37) % 44);
+    if (creekHalf(Math.abs(x), w) < 30) continue;
+    g.beginPath();
+    g.arc(x, y, 12, Math.PI * 1.15, Math.PI * 1.85);
+    g.strokePath();
   }
 }

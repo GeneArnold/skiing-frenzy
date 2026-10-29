@@ -25,6 +25,7 @@ export class BootScene extends Phaser.Scene {
     setupCamera(this);
     const status = text(this, W / 2, H / 2, "Waxing the skis...", 28);
     for (const key of SPRITES) this.load.image(key, `img/${key}.png`);
+    this.load.image("bg-title", "img/bg-title.jpg"); // the cartoon mountain behind the menu screens
     this.load.json("sayings", "sayings/sayings.json");
     this.load.on("progress", (v) => status.setText(`Waxing the skis... ${Math.round(v * 100)}%`));
     this.load.on("loaderror", (file) => console.warn("Could not load", file.src));

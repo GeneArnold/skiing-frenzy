@@ -48,6 +48,7 @@ const FILES = [
   "img/tree.png", "img/rock.png", "img/snowman.png", "img/reindeer.png", "img/ice.png", "img/cocoa.png", "img/gift.png",
   "img/kid-1.png", "img/kid-2.png", "img/kid-3.png", "img/kid-4.png", "img/kid-5.png", "img/kid-6.png", "img/kid-7.png",
   "img/house-red.png", "img/house-blue.png", "img/house-green.png", "img/house-brown.png",
+  "img/bg-title.jpg",
   "img/birch.png", "img/fence.png", "img/lantern.png", "img/icespire.png", "img/candycane.png", "img/xmastree.png",
   "sayings/voices/cocoa-1.mp3",
   "sayings/voices/cocoa-2.mp3",
