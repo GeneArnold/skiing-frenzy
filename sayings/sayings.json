@@ -1,0 +1,229 @@
+{
+  "_about": "Spoken lines. Each kind is a list; the game picks one at random. A line with \"voiced\": true also plays sayings/voices/<id>.mp3. Santa says every kind except the kid- (girls) and boy- ones. Kind and jolly: nobody is rude.",
+  "start": [
+    {
+      "id": "start-1",
+      "text": "Ho ho ho! Here we go!",
+      "voiced": true
+    },
+    {
+      "id": "start-2",
+      "text": "Who needs a sleigh? Wheeee!",
+      "voiced": true
+    },
+    {
+      "id": "start-3",
+      "text": "Presents coming through!",
+      "voiced": true
+    },
+    {
+      "id": "start-4",
+      "text": "Hold on to your hats! Ho ho ho!",
+      "voiced": true
+    }
+  ],
+  "gift": [
+    {
+      "id": "gift-1",
+      "text": "Merry Christmas!",
+      "voiced": true
+    },
+    {
+      "id": "gift-2",
+      "text": "Ho ho ho! This one's for you!",
+      "voiced": true
+    },
+    {
+      "id": "gift-3",
+      "text": "Special delivery!",
+      "voiced": true
+    },
+    {
+      "id": "gift-4",
+      "text": "Catch! Ho ho ho!",
+      "voiced": true
+    },
+    {
+      "id": "gift-5",
+      "text": "No peeking till Christmas!",
+      "voiced": true
+    }
+  ],
+  "crash": [
+    {
+      "id": "crash-1",
+      "text": "Oof! Too many cookies!",
+      "voiced": true
+    },
+    {
+      "id": "crash-2",
+      "text": "Who put that there?",
+      "voiced": true
+    },
+    {
+      "id": "crash-3",
+      "text": "Ho ho... ow.",
+      "voiced": true
+    },
+    {
+      "id": "crash-4",
+      "text": "My beard is full of snow!",
+      "voiced": true
+    },
+    {
+      "id": "crash-5",
+      "text": "Santa's okay! Santa's okay!",
+      "voiced": true
+    }
+  ],
+  "splash": [
+    {
+      "id": "splash-1",
+      "text": "Brrr! That's chilly!",
+      "voiced": true
+    },
+    {
+      "id": "splash-2",
+      "text": "Oh! My boots are full of water!",
+      "voiced": true
+    }
+  ],
+  "skid": [
+    {
+      "id": "skid-1",
+      "text": "Whoa whoa whoa!",
+      "voiced": true
+    },
+    {
+      "id": "skid-2",
+      "text": "Slippery!",
+      "voiced": true
+    }
+  ],
+  "leap": [
+    {
+      "id": "leap-1",
+      "text": "Look! No reindeer!",
+      "voiced": true
+    },
+    {
+      "id": "leap-2",
+      "text": "Wheeee!",
+      "voiced": true
+    }
+  ],
+  "cocoa": [
+    {
+      "id": "cocoa-1",
+      "text": "Mmm! Hot cocoa!",
+      "voiced": true
+    },
+    {
+      "id": "cocoa-2",
+      "text": "Ahh, that hits the spot!",
+      "voiced": true
+    }
+  ],
+  "madeit": [
+    {
+      "id": "madeit-1",
+      "text": "Ho ho ho! Made it!",
+      "voiced": true
+    },
+    {
+      "id": "madeit-2",
+      "text": "Next stop, the village!",
+      "voiced": true
+    }
+  ],
+  "wipeout": [
+    {
+      "id": "wipeout-1",
+      "text": "Ho ho hum. Let's try that again!",
+      "voiced": true
+    },
+    {
+      "id": "wipeout-2",
+      "text": "Even Santa needs a nap sometimes.",
+      "voiced": true
+    }
+  ],
+  "kid-call": [
+    {
+      "id": "kid-call-1",
+      "text": "Hey Santa! Over here!",
+      "voiced": true
+    },
+    {
+      "id": "kid-call-2",
+      "text": "Santa! Santa! Over here!",
+      "voiced": true
+    },
+    {
+      "id": "kid-call-3",
+      "text": "Yay! It's Santa!",
+      "voiced": true
+    },
+    {
+      "id": "kid-call-4",
+      "text": "Santa! I've been good!",
+      "voiced": true
+    }
+  ],
+  "kid-thanks": [
+    {
+      "id": "kid-thanks-1",
+      "text": "Thank you, Santa!",
+      "voiced": true
+    },
+    {
+      "id": "kid-thanks-2",
+      "text": "Wow! Thanks, Santa!",
+      "voiced": true
+    },
+    {
+      "id": "kid-thanks-3",
+      "text": "Merry Christmas, Santa!",
+      "voiced": true
+    }
+  ],
+  "boy-call": [
+    {
+      "id": "boy-call-1",
+      "text": "Hey Santa! Over here!",
+      "voiced": true
+    },
+    {
+      "id": "boy-call-2",
+      "text": "Santa! Santa! Over here!",
+      "voiced": true
+    },
+    {
+      "id": "boy-call-3",
+      "text": "Yay! It's Santa!",
+      "voiced": true
+    },
+    {
+      "id": "boy-call-4",
+      "text": "Santa! I've been good!",
+      "voiced": true
+    }
+  ],
+  "boy-thanks": [
+    {
+      "id": "boy-thanks-1",
+      "text": "Thank you, Santa!",
+      "voiced": true
+    },
+    {
+      "id": "boy-thanks-2",
+      "text": "Wow! Thanks, Santa!",
+      "voiced": true
+    },
+    {
+      "id": "boy-thanks-3",
+      "text": "Merry Christmas, Santa!",
+      "voiced": true
+    }
+  ]
+}

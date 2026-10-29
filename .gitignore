@@ -1,0 +1,10 @@
+.DS_Store
+
+# family photos and art work files stay on this computer
+*.jpg
+!img/*.jpg
+*.jpeg
+art/source/
+sayings/voice-samples/
+
+CLAUDE.md
