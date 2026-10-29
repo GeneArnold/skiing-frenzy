@@ -2,6 +2,7 @@
 #   python3 tools/art-prompts.py santa [straight turn jump crash]   Santa's poses, one picture each
 #   python3 tools/art-prompts.py kids         a sheet of kids playing in the snow, waiting for gifts
 #   python3 tools/art-prompts.py things [tree rock ...]   things on the slope, one each
+#   python3 tools/art-prompts.py houses [red blue ...]   the village cottages at the bottom of a run
 #   add --n 4 for more tries of each (default 3)
 # Tries land in art/source/gen/; tools/cutout.py turns the picks into img/ sprites.
 import subprocess
@@ -43,6 +44,16 @@ THINGS = {
     "gift": "a single wrapped Christmas present, red paper with a green ribbon and a bow" + ONE,
 }
 
+HOUSE = ("a single cosy cartoon Christmas cottage, front view, chunky wobbly hand-drawn shape, a thick "
+         "fluffy blanket of snow on the roof with icicles hanging off the edge, a crooked brick chimney, "
+         "warm glowing yellow windows, a round-topped door with a green wreath, ")
+HOUSES = {
+    "red": "red walls, red door" + ONE,
+    "blue": "light blue walls, yellow door" + ONE,
+    "green": "green walls, red door, a little Christmas tree beside it" + ONE,
+    "brown": "a log cabin of brown logs, red door" + ONE,
+}
+
 
 def swarm(name, prompt, w, h, raw=False):
     cmd = ["python3", "tools/swarm.py", name, prompt, "--n", N, "--w", str(w), "--h", str(h)]
@@ -63,6 +74,10 @@ def main():
         for kind, prompt in THINGS.items():
             if not pick or kind in pick:
                 swarm(kind, prompt, 1024, 1024)
+    elif what == "houses":
+        for colour, words in HOUSES.items():
+            if not pick or colour in pick:
+                swarm("house-" + colour, HOUSE + words, 1024, 1024)
 
 
 main()

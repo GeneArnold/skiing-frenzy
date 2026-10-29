@@ -8,7 +8,7 @@ import * as sayings from "../sayings.js";
 import * as store from "../storage.js";
 import { BOYS, CREEK_H, LEFT, RIGHT, makeKid, makeRow } from "../course.js";
 import {
-  BIG_HOLD, BIG_S, HOP_S, KINDS, LIVES, MAX_LIVES, METRE, NUDGE, POINTS, REACH, SAFE_S, SLIDE_S, STEER, runRules,
+  BIG_HOLD, BIG_S, HOP_S, KID_CALL, KID_THANKS, KINDS, LIVES, MAX_LIVES, METRE, NUDGE, POINTS, REACH, SAFE_S, SANTA_GIFT, SLIDE_S, STEER, runRules,
 } from "../rules.js";
 import { sized } from "../textures.js";
 import { H, W, fingerAt, floatText, inside, setupCamera, speech, text } from "../ui.js";
@@ -42,6 +42,7 @@ export class PlayScene extends Phaser.Scene {
     this.run = { run: 0, score: 0, gifts: 0, lives: LIVES, ...run };
     this.rules = runRules(this.run.run);
     this.phase = "ski";      // ski | crash | made-it | over
+    this.leaving = false;    // the scene object is reused, so this must be reset every run
     this.dist = 0;           // px of slope skied this run
     this.x = W / 2;
     this.vx = 0;
@@ -282,8 +283,10 @@ export class PlayScene extends Phaser.Scene {
     this.run.gifts++;
     this.run.score += POINTS.gift;
     audio.play("jingle");
-    if (Math.random() < 0.5) this.say(kidVoice(kid, "thanks"), kid.sprite);
-    else this.say("gift", this.santa);
+    // not every gift gets words, or it's too noisy: sometimes the kid says thanks, sometimes Santa talks
+    const roll = Math.random();
+    if (roll < KID_THANKS) this.say(kidVoice(kid, "thanks"), kid.sprite);
+    else if (roll < KID_THANKS + SANTA_GIFT) this.say("gift", this.santa);
     floatText(this, kid.sprite.x, kid.sprite.y - 90, `+${POINTS.gift}`, "#2a9d3a", 30);
     // the present flies from Santa's sack into the kid's arms (place() moves it), and the kid jumps for joy
     kid.gift = sized(this.add.image(this.santa.x, this.santa.y - 60, "gift"), 0.8);
@@ -452,10 +455,10 @@ export class PlayScene extends Phaser.Scene {
           ).setAngle(f < 1 ? f * 360 : 0).setDepth(f < 1 ? 4000 : sy + 1);
         }
         t.hint?.setPosition(t.x, sy - 104);
-        // a kid coming up the slope calls out (now and then, so they don't all shout at once)
+        // a kid coming up the slope calls out now and then (Gene: not every kid, it gets noisy)
         if (!t.called && sy < FIELD_H - 120 && sy > SANTA_Y + 120 && this.phase === "ski") {
           t.called = true;
-          if (this.time.now - this.lastCall > 2500 && !audio.talking()) {
+          if (Math.random() < KID_CALL && this.time.now - this.lastCall > 6000 && !audio.talking()) {
             this.lastCall = this.time.now;
             this.say(kidVoice(t, "call"), t.sprite);
           }
@@ -521,15 +524,10 @@ export class PlayScene extends Phaser.Scene {
     g.fillStyle(0x1b2440).fillRect(36, -90, 10, 96).fillRect(W - 46, -90, 10, 96);
     g.fillStyle(0x1b2440).fillRoundedRect(40, -96, W - 80, 52, 10);
     g.fillStyle(0xd62828).fillRoundedRect(44, -92, W - 88, 44, 8);
-    const houses = [[90, 130, 0xb5651d], [230, 170, 0x2a6f9d], [380, 120, 0x7d5a3c], [480, 190, 0x2a9d3a], [150, 260, 0x7b2cbf]];
-    for (const [x, y, colour] of houses) {
-      g.fillStyle(0x1b2440).fillRect(x - 44, y - 40, 88, 64);
-      g.fillStyle(colour).fillRect(x - 40, y - 36, 80, 56);
-      g.fillStyle(0xffe066).fillRect(x - 28, y - 22, 18, 16).fillRect(x + 10, y - 22, 18, 16);
-      g.fillStyle(0x1b2440).fillTriangle(x - 54, y - 36, x + 54, y - 36, x, y - 86);
-      g.fillStyle(0xffffff).fillTriangle(x - 46, y - 40, x + 46, y - 40, x, y - 80);
-    }
     c.add(g);
+    // cartoon cottages (img/house-*.png), back row first so the front ones overlap them
+    const houses = [[380, 110, "red"], [90, 120, "blue"], [235, 160, "brown"], [475, 190, "green"], [150, 260, "red"], [340, 280, "blue"]];
+    for (const [x, y, colour] of houses) c.add(this.add.image(x, y, "house-" + colour).setOrigin(0.5, 0.9).setScale(0.55));
     c.add(text(this, W / 2, -70, "🎄 THE VILLAGE 🎄", 28, { color: "#ffffff", strokeThickness: 5 }));
     return c;
   }

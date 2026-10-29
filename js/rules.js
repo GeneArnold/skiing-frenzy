@@ -44,6 +44,41 @@ export const RUNS = [
     speed: 310, speedUp: 70, length: 11000, gap: [180, 250], busy: 2,
     things: { tree: 7, rock: 3, ice: 2, snowman: 2, creek: 2, reindeer: 2 }, kids: 0.6,
   },
+  {
+    name: "RUN 6", place: "Snowman Meadow", note: "Who built all these snowmen?",
+    speed: 322, speedUp: 70, length: 11000, gap: [180, 250], busy: 2,
+    things: { tree: 4, rock: 2, ice: 1, snowman: 6, creek: 1, reindeer: 1 }, kids: 0.65,
+  },
+  {
+    name: "RUN 7", place: "Icicle Slide", note: "Slippery! Hop over the ice",
+    speed: 334, speedUp: 70, length: 11500, gap: [175, 245], busy: 2.05,
+    things: { tree: 5, rock: 2, ice: 6, snowman: 1, creek: 1, reindeer: 1 }, kids: 0.6,
+  },
+  {
+    name: "RUN 8", place: "Rocky Ridge", note: "Jump, jump, jump!",
+    speed: 346, speedUp: 75, length: 12000, gap: [175, 240], busy: 2.1,
+    things: { tree: 5, rock: 7, ice: 2, snowman: 1, creek: 1, reindeer: 1 }, kids: 0.6,
+  },
+  {
+    name: "RUN 9", place: "Three Creeks", note: "Hold JUMP to fly over the water",
+    speed: 358, speedUp: 75, length: 12000, gap: [170, 240], busy: 2.15,
+    things: { tree: 6, rock: 3, ice: 2, snowman: 1, creek: 4, reindeer: 1 }, kids: 0.6,
+  },
+  {
+    name: "RUN 10", place: "The Reindeer Run", note: "The whole herd is out tonight",
+    speed: 370, speedUp: 80, length: 12500, gap: [170, 235], busy: 2.2,
+    things: { tree: 6, rock: 3, ice: 2, snowman: 1, creek: 1, reindeer: 5 }, kids: 0.6,
+  },
+  {
+    name: "RUN 11", place: "Deep Dark Woods", note: "So many trees!",
+    speed: 382, speedUp: 80, length: 13000, gap: [165, 230], busy: 2.3,
+    things: { tree: 11, rock: 3, ice: 2, snowman: 1, creek: 1, reindeer: 2 }, kids: 0.6,
+  },
+  {
+    name: "RUN 12", place: "North Pole Peak", note: "The top of the world!",
+    speed: 394, speedUp: 85, length: 14000, gap: [160, 230], busy: 2.4,
+    things: { tree: 7, rock: 4, ice: 3, snowman: 2, creek: 2, reindeer: 3 }, kids: 0.6,
+  },
 ];
 
 // Past the last run it keeps going, a little faster and busier each time.
@@ -54,7 +89,7 @@ export function runRules(n) {
   return {
     ...last,
     name: `RUN ${n + 1}`, place: "Even Bigger Mountain", note: "How far can Santa go?",
-    speed: last.speed + 12 * extra,
+    speed: Math.min(480, last.speed + 10 * extra),
     gap: [Math.max(150, last.gap[0] - 6 * extra), Math.max(210, last.gap[1] - 6 * extra)],
     busy: Math.min(2.6, last.busy + 0.1 * extra),
   };
@@ -81,5 +116,9 @@ export const BIG_S = 1.2;
 export const BIG_HOLD = 700;
 export const SLIDE_S = 0.9;      // how long ice takes away the steering
 export const CREEK_H = 150;      // how tall a creek is, top to bottom
+// Talking: how often a kid coming up the slope calls out, and who talks when a gift lands.
+export const KID_CALL = 0.3;     // the chance a kid calls out (and never within 6 s of the last one)
+export const KID_THANKS = 0.25;  // a gift: the kid says thanks
+export const SANTA_GIFT = 0.25;  // ... or Santa says something; otherwise just the jingle
 export const REACH = 80;         // how close (across) counts as skiing past a kid
 export const SAFE_S = 1.6;       // after a crash, Santa can't crash again for this long
