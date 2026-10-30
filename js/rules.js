@@ -120,12 +120,17 @@ export function runRules(n) {
   };
 }
 
+// Points come from skill, not from just getting down the hill (Gene, 2026-10-30): gifts, gift
+// streaks, clean jumps, and a gift for every kid on a run.
 export const POINTS = {
-  gift: 100,   // each kid who gets a present
-  metre: 1,    // every METRE of slope
-  run: 500,    // making it to the village
+  gift: 100,      // each kid who gets a present (times the streak)
+  rockJump: 25,   // jumping clean over a rock
+  creekJump: 50,  // jumping clean over a creek
+  everyKid: 500,  // reaching the village having given every kid on the run a present
 };
-export const METRE = 20; // px of slope per point
+// The gift streak: gifts in a row with no crash and no kid missed. At STREAK[i] in a row, gifts
+// are worth i + 2 times as much (x2 at 5, x3 at 10).
+export const STREAK = [5, 10];
 
 export const LIVES = 3;
 export const MAX_LIVES = 5;

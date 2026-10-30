@@ -8,7 +8,7 @@ import * as sayings from "../sayings.js";
 import * as store from "../storage.js";
 import { BOYS, CREEK_H, LEFT, RIGHT, makeKid, makeRow } from "../course.js";
 import {
-  BIG_HOLD, BIG_S, HOP_S, KID_CALL, KID_THANKS, KINDS, LIVES, MAX_LIVES, METRE, NUDGE, POINTS, REACH, SAFE_S, SANTA_GIFT, SLIDE_S, STEER, areaOf, runRules,
+  BIG_HOLD, BIG_S, HOP_S, KID_CALL, KID_THANKS, KINDS, LIVES, MAX_LIVES, NUDGE, POINTS, REACH, SAFE_S, SANTA_GIFT, SLIDE_S, STEER, STREAK, areaOf, runRules,
 } from "../rules.js";
 import { sized } from "../textures.js";
 import { H, W, fingerAt, floatText, inside, setupCamera, snowfall, speech, text } from "../ui.js";
@@ -60,7 +60,9 @@ export class PlayScene extends Phaser.Scene {
     this.time.paused = false;
     this.tweens.resumeAll();
 
-    this.run = { run: 0, score: 0, gifts: 0, lives: LIVES, ...run };
+    this.run = { run: 0, score: 0, gifts: 0, lives: LIVES, streak: 0, bestStreak: 0, ...run };
+    this.kidsMissed = 0;     // kids on this run who didn't get a present (all get one: a bonus)
+    this.giftsAtStart = this.run.gifts;
     this.rules = runRules(this.run.run);
     this.phase = "ski";      // ski | crash | made-it | over
     this.leaving = false;    // the scene object is reused, so this must be reset every run
@@ -246,7 +248,6 @@ export class PlayScene extends Phaser.Scene {
     if (this.phase === "made-it") speed = Math.max(0, (this.speedAtEnd -= dt * 220));
     this.speed = speed;
     this.dist += speed * dt;
-    if (this.phase === "ski") this.run.score += (speed * dt * POINTS.metre) / METRE;
 
     // steering: held arrows glide; a tap still moves NUDGE px
     if (this.slideT > 0) {
@@ -288,6 +289,7 @@ export class PlayScene extends Phaser.Scene {
       const dx = Math.abs(t.x - this.x);
       if (t.kind === "kid") {
         if (Math.abs(dy) < 40 && dx < REACH) this.giveGift(t);
+        else if (dy < -40) this.missKid(t);
         continue;
       }
       if (t.kind === "cocoa") {
@@ -296,9 +298,15 @@ export class PlayScene extends Phaser.Scene {
       }
       if (t.kind === "creek") {
         if (!air && dx < t.w / 2 && Math.abs(dy + CREEK_H / 2) < creekHalf(dx, t.w) - 6) this.crash(t);
+        else if (air && dx < t.w / 2 && dy < 0 && dy > -CREEK_H) t.flown = true;
+        else if (t.flown && dy <= -CREEK_H) this.jumpBonus(t, POINTS.creekJump, "BIG AIR!");
         continue;
       }
       const k = KINDS[t.kind];
+      if (t.kind === "rock") {
+        if (air && Math.abs(dy) <= k.r && dx <= k.r + 14) t.flown = true;
+        else if (t.flown && dy < -k.r) this.jumpBonus(t, POINTS.rockJump, "NICE JUMP!");
+      }
       if (Math.abs(dy) > k.r || dx > k.r + 14) continue;
       if (air && !k.tall) continue;
       if (k.hit === "slide") {
@@ -312,18 +320,46 @@ export class PlayScene extends Phaser.Scene {
   giveGift(kid) {
     kid.done = true;
     this.run.gifts++;
-    this.run.score += POINTS.gift;
+    this.run.streak++;
+    this.run.bestStreak = Math.max(this.run.bestStreak, this.run.streak);
+    const times = this.times();
+    this.run.score += POINTS.gift * times;
+    if (STREAK.includes(this.run.streak)) floatText(this, W / 2, 420, `GIFT STREAK! x${times}`, "#ffe066", 40);
     audio.play("jingle");
     // not every gift gets words, or it's too noisy: sometimes the kid says thanks, sometimes Santa talks
     const roll = Math.random();
     if (roll < KID_THANKS) this.say(kidVoice(kid, "thanks"), kid.sprite);
     else if (roll < KID_THANKS + SANTA_GIFT) this.say("gift", this.santa);
-    floatText(this, kid.sprite.x, kid.sprite.y - 90, `+${POINTS.gift}`, "#2a9d3a", 30);
+    floatText(this, kid.sprite.x, kid.sprite.y - 90, `+${POINTS.gift * times}`, "#2a9d3a", 30);
     // the present flies from Santa's sack into the kid's arms (place() moves it), and the kid jumps for joy
     kid.gift = sized(this.add.image(this.santa.x, this.santa.y - 60, "gift"), 0.8);
     kid.giftFrom = { x: this.santa.x, y: this.santa.y - 60 };
     kid.giftT = 0;
     kid.hint?.destroy();
+  }
+
+  // How much a gift is worth right now, from the streak: 1, 2 or 3 times.
+  times() {
+    return 1 + STREAK.filter((n) => this.run.streak >= n).length;
+  }
+
+  // A kid went by without a present: the streak is over, and no every-kid bonus this run.
+  missKid(kid) {
+    kid.done = true;
+    this.kidsMissed++;
+    this.breakStreak();
+  }
+
+  breakStreak() {
+    if (this.run.streak >= STREAK[0]) floatText(this, W / 2, 380, "STREAK OVER", "#ffffff", 30);
+    this.run.streak = 0;
+  }
+
+  // A clean jump over a rock or a creek.
+  jumpBonus(t, points, words) {
+    t.done = true;
+    this.run.score += points;
+    floatText(this, this.x, SANTA_Y - 120, `+${points} ${words}`, "#9fd3ff", 26);
   }
 
   drinkCocoa(mug) {
@@ -353,6 +389,7 @@ export class PlayScene extends Phaser.Scene {
     t.done = true;
     this.phase = "crash";
     this.run.lives--;
+    this.breakStreak();
     this.airS = 0;
     this.slideT = 0;
     this.nudge = 0;
@@ -422,20 +459,23 @@ export class PlayScene extends Phaser.Scene {
   madeIt() {
     this.phase = "made-it";
     this.speedAtEnd = this.speed;
-    this.run.score += POINTS.run;
     this.run.finished = (this.run.finished ?? 0) + 1;
     audio.play("cheer");
     this.say("madeit", this.santa);
     const t = text(this, W / 2, 470, "MADE IT!", 76, { color: "#7CFC9A", strokeThickness: 12 }).setDepth(6000);
     this.tweens.add({ targets: t, scale: 1.12, duration: 300, yoyo: true, repeat: -1 });
-    floatText(this, W / 2, 560, `+${POINTS.run} VILLAGE BONUS`, "#ffe066", 32);
+    // every kid on the run got a present (kids still on the slope below don't count against you)
+    if (this.kidsMissed === 0 && this.run.gifts > this.giftsAtStart) {
+      this.run.score += POINTS.everyKid;
+      floatText(this, W / 2, 560, `+${POINTS.everyKid} EVERY KID!`, "#ffe066", 36);
+    }
   }
 
   finish() {
     const score = Math.round(this.run.score);
     const reached = this.run.run + 1;
     const { rank, previousTop } = store.recordRun(score, reached, this.run.gifts);
-    this.scene.start("Results", { score, reached, gifts: this.run.gifts, finished: this.run.finished ?? 0, rank, previousTop, challenge: store.get("challenge") });
+    this.scene.start("Results", { score, reached, gifts: this.run.gifts, finished: this.run.finished ?? 0, streak: this.run.bestStreak, rank, previousTop, challenge: store.get("challenge") });
   }
 
   // ---- the slope ----
@@ -674,7 +714,7 @@ export class PlayScene extends Phaser.Scene {
 
   updateHud() {
     this.scoreText.setText(Math.round(this.run.score).toLocaleString());
-    this.giftText.setText(String(this.run.gifts));
+    this.giftText.setText(String(this.run.gifts) + (this.times() > 1 ? `  x${this.times()}` : ""));
     this.lifeIcons.forEach((icon, i) => icon.setVisible(i < this.run.lives));
     const f = Math.min(1, this.dist / this.villageAt);
     this.marker.x = this.trackX[0] + f * (this.trackX[1] - this.trackX[0]);

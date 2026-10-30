@@ -19,7 +19,7 @@ export class ResultsScene extends Phaser.Scene {
     super("Results");
   }
 
-  create({ score, reached, gifts, finished, rank, previousTop, challenge }) {
+  create({ score, reached, gifts, finished, streak = 0, rank, previousTop, challenge }) {
     setupCamera(this);
     backdrop(this);
     this.run = { score, gifts };
@@ -60,13 +60,16 @@ export class ResultsScene extends Phaser.Scene {
     audio.play(cheer ? "cheer" : "groan");
 
     const box = this.add.graphics();
-    box.fillStyle(0x000000, 0.35).fillRoundedRect(70, 380, W - 140, 160, 20);
-    sized(this.add.image(120, 422, "gift"), 1);
-    text(this, 150, 422, "Presents given", 26, { originX: 0, strokeThickness: 5 });
-    text(this, W - 100, 422, String(gifts), 32, { originX: 1, color: "#ffe066", strokeThickness: 5 });
-    sized(this.add.image(120, 494, "santa"), 0.3);
-    text(this, 150, 494, "Runs finished", 26, { originX: 0, strokeThickness: 5 });
-    text(this, W - 100, 494, String(finished), 32, { originX: 1, color: "#ffe066", strokeThickness: 5 });
+    box.fillStyle(0x000000, 0.35).fillRoundedRect(70, 380, W - 140, 186, 20);
+    sized(this.add.image(120, 416, "gift"), 1);
+    text(this, 150, 416, "Presents given", 26, { originX: 0, strokeThickness: 5 });
+    text(this, W - 100, 416, String(gifts), 32, { originX: 1, color: "#ffe066", strokeThickness: 5 });
+    sized(this.add.image(120, 473, "santa"), 0.3);
+    text(this, 150, 473, "Runs finished", 26, { originX: 0, strokeThickness: 5 });
+    text(this, W - 100, 473, String(finished), 32, { originX: 1, color: "#ffe066", strokeThickness: 5 });
+    text(this, 120, 530, "🔥", 30, { strokeThickness: 0 });
+    text(this, 150, 530, "Best gift streak", 26, { originX: 0, strokeThickness: 5 });
+    text(this, W - 100, 530, String(streak), 32, { originX: 1, color: "#ffe066", strokeThickness: 5 });
 
     const buttons = [
       [AGAIN, 0x2a9d3a, "▶ PLAY AGAIN", 38],
