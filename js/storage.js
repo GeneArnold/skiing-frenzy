@@ -2,6 +2,7 @@
 // The browser may clear it (clearing site data, or uninstalling the app); that only costs scores.
 const KEY = "skiing.v1";
 const BOARD_SIZE = 10;
+const SCORING = 2; // raise this to clear every phone's scores when the scoring changes
 export const BOARD = "slope"; // one high-score board: every game starts on run 1
 
 const DEFAULTS = {
@@ -22,6 +23,14 @@ function load() {
     cache = { ...DEFAULTS };
   }
   delete cache.outbox; // left over from when scores went online
+  // Scores from before points came from skill (2026-10-30) included distance and aren't comparable,
+  // so they go, once. Initials and sound stay.
+  if (cache.scoring !== SCORING) {
+    cache.board = [];
+    cache.challenge = null;
+    cache.scoring = SCORING;
+    persist();
+  }
   return cache;
 }
 
