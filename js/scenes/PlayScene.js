@@ -25,6 +25,7 @@ const PADS = {
   right: { x: 366, y: PAD_Y, w: 160, h: PAD_H },
 };
 const TAP_MS = 180;         // a JUMP press shorter than this is a hop
+const JUMPED = { rock: "NICE JUMP!", ice: "OVER THE ICE!", snowman: "SNOWMAN HOP!", reindeer: "REINDEER LEAP!" };
 const GAGS = { tree: "BONK!", rock: "OOF!", snowman: "SPLAT!", reindeer: "OH DEER!", creek: "SPLASH!" };
 
 // The light (dusk, night) is laid over the slope at this depth: above everything on the snow and
@@ -303,9 +304,10 @@ export class PlayScene extends Phaser.Scene {
         continue;
       }
       const k = KINDS[t.kind];
-      if (t.kind === "rock") {
+      if (!k.tall) {
+        // everything but a tree can be jumped, and a clean jump scores once it's behind him
         if (air && Math.abs(dy) <= k.r && dx <= k.r + 14) t.flown = true;
-        else if (t.flown && dy < -k.r) this.jumpBonus(t, POINTS.rockJump, "NICE JUMP!");
+        else if (t.flown && dy < -k.r) this.jumpBonus(t, t.kind === "reindeer" ? POINTS.reindeerJump : POINTS.jump, JUMPED[t.kind]);
       }
       if (Math.abs(dy) > k.r || dx > k.r + 14) continue;
       if (air && !k.tall) continue;
@@ -359,7 +361,7 @@ export class PlayScene extends Phaser.Scene {
   jumpBonus(t, points, words) {
     t.done = true;
     this.run.score += points;
-    floatText(this, this.x, SANTA_Y - 120, `+${points} ${words}`, "#9fd3ff", 26);
+    floatText(this, Phaser.Math.Clamp(this.x, 150, W - 150), SANTA_Y - 110, `+${points} ${words}`, "#ffe066", 30);
   }
 
   drinkCocoa(mug) {

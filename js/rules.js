@@ -124,8 +124,9 @@ export function runRules(n) {
 // streaks, clean jumps, and a gift for every kid on a run.
 export const POINTS = {
   gift: 100,      // each kid who gets a present (times the streak)
-  rockJump: 25,   // jumping clean over a rock
-  creekJump: 50,  // jumping clean over a creek
+  jump: 50,       // jumping clean over a rock, ice or a snowman
+  reindeerJump: 75, // over a reindeer: bigger, and it moves
+  creekJump: 100, // jumping clean over a creek
   everyKid: 500,  // reaching the village having given every kid on the run a present
 };
 // The gift streak: gifts in a row with no crash and no kid missed. At STREAK[i] in a row, gifts
