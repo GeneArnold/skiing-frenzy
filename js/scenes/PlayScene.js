@@ -697,8 +697,8 @@ export class PlayScene extends Phaser.Scene {
     const g = this.add.graphics().setDepth(d);
     g.fillStyle(0x1b2440, 0.55).fillRect(0, 0, W, 76);
     this.scoreText = text(this, 16, 28, "0", 30, { originX: 0 }).setDepth(d);
-    sized(this.add.image(24, 60, "gift"), 0.5).setDepth(d);
-    this.giftText = text(this, 40, 60, "0", 18, { originX: 0, color: "#7CFC9A", strokeThickness: 4 }).setDepth(d);
+    // the gift streak, only while there is one: 🔥 3/5, then 🔥 x2 7/10, then 🔥 x3
+    this.streakText = text(this, 16, 60, "", 18, { originX: 0, color: "#ffe066", strokeThickness: 4 }).setDepth(d);
     // lives: a little Santa for each
     this.lifeIcons = Array.from({ length: MAX_LIVES }, (_, i) => sized(this.add.image(W - 26 - i * 34, 32, "santa"), 0.24).setDepth(d));
     // the pause button
@@ -714,7 +714,10 @@ export class PlayScene extends Phaser.Scene {
 
   updateHud() {
     this.scoreText.setText(Math.round(this.run.score).toLocaleString());
-    this.giftText.setText(String(this.run.gifts) + (this.times() > 1 ? `  x${this.times()}` : ""));
+    const n = this.run.streak;
+    const next = STREAK.find((s) => n < s);
+    const times = this.times() > 1 ? `x${this.times()}  ` : "";
+    this.streakText.setText(n < 2 ? "" : `🔥 ${times}${next ? `${n}/${next}` : ""}`.trim());
     this.lifeIcons.forEach((icon, i) => icon.setVisible(i < this.run.lives));
     const f = Math.min(1, this.dist / this.villageAt);
     this.marker.x = this.trackX[0] + f * (this.trackX[1] - this.trackX[0]);
